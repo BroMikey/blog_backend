@@ -11,28 +11,28 @@ import (
 
 const createCoinTransfer = `-- name: CreateCoinTransfer :one
 INSERT INTO coin_transfer(
-    from_uid,
-    to_uid,
+    from_coin_id,
+    to_coin_id,
     amount
 )VALUES(
     $1, $2, $3
-)RETURNING id, from_uid, to_uid, amount, created_at
+)RETURNING id, from_coin_id, to_coin_id, amount, created_at
 `
 
 type CreateCoinTransferParams struct {
-	FromUid int64 `json:"from_uid"`
-	ToUid   int64 `json:"to_uid"`
-	Amount  int32 `json:"amount"`
+	FromCoinID int64 `json:"from_coin_id"`
+	ToCoinID   int64 `json:"to_coin_id"`
+	Amount     int32 `json:"amount"`
 }
 
 // 用户之间转账硬币
 func (q *Queries) CreateCoinTransfer(ctx context.Context, arg CreateCoinTransferParams) (CoinTransfer, error) {
-	row := q.db.QueryRowContext(ctx, createCoinTransfer, arg.FromUid, arg.ToUid, arg.Amount)
+	row := q.db.QueryRowContext(ctx, createCoinTransfer, arg.FromCoinID, arg.ToCoinID, arg.Amount)
 	var i CoinTransfer
 	err := row.Scan(
 		&i.ID,
-		&i.FromUid,
-		&i.ToUid,
+		&i.FromCoinID,
+		&i.ToCoinID,
 		&i.Amount,
 		&i.CreatedAt,
 	)
@@ -40,7 +40,7 @@ func (q *Queries) CreateCoinTransfer(ctx context.Context, arg CreateCoinTransfer
 }
 
 const getCoinTransfer = `-- name: GetCoinTransfer :one
-SELECT id, from_uid, to_uid, amount, created_at FROM coin_transfer
+SELECT id, from_coin_id, to_coin_id, amount, created_at FROM coin_transfer
 WHERE id = $1 LIMIT 1
 `
 
@@ -50,8 +50,8 @@ func (q *Queries) GetCoinTransfer(ctx context.Context, id int64) (CoinTransfer, 
 	var i CoinTransfer
 	err := row.Scan(
 		&i.ID,
-		&i.FromUid,
-		&i.ToUid,
+		&i.FromCoinID,
+		&i.ToCoinID,
 		&i.Amount,
 		&i.CreatedAt,
 	)
@@ -59,33 +59,33 @@ func (q *Queries) GetCoinTransfer(ctx context.Context, id int64) (CoinTransfer, 
 }
 
 const getCoinTransferCount = `-- name: GetCoinTransferCount :one
-SELECT COUNT(*) FROM coin_transfer WHERE from_uid = $1 OR to_uid = $1
+SELECT COUNT(*) FROM coin_transfer WHERE from_coin_id = $1 OR to_coin_id = $1
 `
 
 // 获取用户的转账总数
-func (q *Queries) GetCoinTransferCount(ctx context.Context, fromUid int64) (int64, error) {
-	row := q.db.QueryRowContext(ctx, getCoinTransferCount, fromUid)
+func (q *Queries) GetCoinTransferCount(ctx context.Context, fromCoinID int64) (int64, error) {
+	row := q.db.QueryRowContext(ctx, getCoinTransferCount, fromCoinID)
 	var count int64
 	err := row.Scan(&count)
 	return count, err
 }
 
 const getCoinTransferReceived = `-- name: GetCoinTransferReceived :many
-SELECT id, from_uid, to_uid, amount, created_at FROM coin_transfer
-WHERE to_uid = $1
+SELECT id, from_coin_id, to_coin_id, amount, created_at FROM coin_transfer
+WHERE to_coin_id = $1
 ORDER BY created_at DESC
 LIMIT $2 OFFSET $3
 `
 
 type GetCoinTransferReceivedParams struct {
-	ToUid  int64 `json:"to_uid"`
-	Limit  int32 `json:"limit"`
-	Offset int32 `json:"offset"`
+	ToCoinID int64 `json:"to_coin_id"`
+	Limit    int32 `json:"limit"`
+	Offset   int32 `json:"offset"`
 }
 
 // 获取用户作为接收方的交易记录
 func (q *Queries) GetCoinTransferReceived(ctx context.Context, arg GetCoinTransferReceivedParams) ([]CoinTransfer, error) {
-	rows, err := q.db.QueryContext(ctx, getCoinTransferReceived, arg.ToUid, arg.Limit, arg.Offset)
+	rows, err := q.db.QueryContext(ctx, getCoinTransferReceived, arg.ToCoinID, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}
@@ -95,8 +95,8 @@ func (q *Queries) GetCoinTransferReceived(ctx context.Context, arg GetCoinTransf
 		var i CoinTransfer
 		if err := rows.Scan(
 			&i.ID,
-			&i.FromUid,
-			&i.ToUid,
+			&i.FromCoinID,
+			&i.ToCoinID,
 			&i.Amount,
 			&i.CreatedAt,
 		); err != nil {
@@ -114,27 +114,27 @@ func (q *Queries) GetCoinTransferReceived(ctx context.Context, arg GetCoinTransf
 }
 
 const listCoinTransfer = `-- name: ListCoinTransfer :many
-SELECT id, from_uid, to_uid, amount, created_at FROM coin_transfer
-WHERE 
-    from_uid = $1 OR
-    to_uid = $2
+SELECT id, from_coin_id, to_coin_id, amount, created_at FROM coin_transfer
+WHERE
+    from_coin_id = $1 OR
+    to_coin_id = $2
 ORDER BY id
 LIMIT $3
 OFFSET $4
 `
 
 type ListCoinTransferParams struct {
-	FromUid int64 `json:"from_uid"`
-	ToUid   int64 `json:"to_uid"`
-	Limit   int32 `json:"limit"`
-	Offset  int32 `json:"offset"`
+	FromCoinID int64 `json:"from_coin_id"`
+	ToCoinID   int64 `json:"to_coin_id"`
+	Limit      int32 `json:"limit"`
+	Offset     int32 `json:"offset"`
 }
 
 // 列出一页硬币的交易
 func (q *Queries) ListCoinTransfer(ctx context.Context, arg ListCoinTransferParams) ([]CoinTransfer, error) {
 	rows, err := q.db.QueryContext(ctx, listCoinTransfer,
-		arg.FromUid,
-		arg.ToUid,
+		arg.FromCoinID,
+		arg.ToCoinID,
 		arg.Limit,
 		arg.Offset,
 	)
@@ -147,8 +147,8 @@ func (q *Queries) ListCoinTransfer(ctx context.Context, arg ListCoinTransferPara
 		var i CoinTransfer
 		if err := rows.Scan(
 			&i.ID,
-			&i.FromUid,
-			&i.ToUid,
+			&i.FromCoinID,
+			&i.ToCoinID,
 			&i.Amount,
 			&i.CreatedAt,
 		); err != nil {
@@ -166,21 +166,21 @@ func (q *Queries) ListCoinTransfer(ctx context.Context, arg ListCoinTransferPara
 }
 
 const listTransfer = `-- name: ListTransfer :many
-SELECT id, from_uid, to_uid, amount, created_at FROM coin_transfer
-WHERE from_uid = $1
+SELECT id, from_coin_id, to_coin_id, amount, created_at FROM coin_transfer
+WHERE from_coin_id = $1
 ORDER BY created_at DESC
 LIMIT $2 OFFSET $3
 `
 
 type ListTransferParams struct {
-	FromUid int64 `json:"from_uid"`
-	Limit   int32 `json:"limit"`
-	Offset  int32 `json:"offset"`
+	FromCoinID int64 `json:"from_coin_id"`
+	Limit      int32 `json:"limit"`
+	Offset     int32 `json:"offset"`
 }
 
 // 获取用户作为发送方的交易记录
 func (q *Queries) ListTransfer(ctx context.Context, arg ListTransferParams) ([]CoinTransfer, error) {
-	rows, err := q.db.QueryContext(ctx, listTransfer, arg.FromUid, arg.Limit, arg.Offset)
+	rows, err := q.db.QueryContext(ctx, listTransfer, arg.FromCoinID, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}
@@ -190,8 +190,8 @@ func (q *Queries) ListTransfer(ctx context.Context, arg ListTransferParams) ([]C
 		var i CoinTransfer
 		if err := rows.Scan(
 			&i.ID,
-			&i.FromUid,
-			&i.ToUid,
+			&i.FromCoinID,
+			&i.ToCoinID,
 			&i.Amount,
 			&i.CreatedAt,
 		); err != nil {

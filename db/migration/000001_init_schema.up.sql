@@ -113,4 +113,12 @@ ALTER TABLE "article_comment"
 ALTER TABLE "article_comment" 
   ADD FOREIGN KEY ("parent_id") REFERENCES "article_comment" ("id") ON DELETE SET NULL;
 
+-- 添加follow_relationship外键
+ALTER TABLE follow_relationship
+  ADD FOREIGN KEY (follower_uid) REFERENCES users (uid) ON DELETE CASCADE;
+
+ALTER TABLE follow_relationship
+  ADD FOREIGN KEY (followed_uid) REFERENCES users (uid) ON DELETE CASCADE;
+
+
 INSERT INTO "users" (username, email, password_hash, status) VALUES ('bro', 'bro@example.com', 'hashed_password', 1);

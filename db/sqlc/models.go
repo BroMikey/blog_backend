@@ -63,33 +63,28 @@ type Category struct {
 }
 
 type Coin struct {
-	ID        int64        `json:"id"`
-	Uid       int64        `json:"uid"`
-	Balance   int32        `json:"balance"`
+	ID      int64 `json:"id"`
+	Uid     int64 `json:"uid"`
+	Balance int32 `json:"balance"`
+	// penny nickel dime
+	CoinType  string       `json:"coin_type"`
 	CreatedAt sql.NullTime `json:"created_at"`
 	UpdatedAt sql.NullTime `json:"updated_at"`
 }
 
 type CoinEntry struct {
 	ID        int64        `json:"id"`
-	Uid       int64        `json:"uid"`
+	CoinID    int64        `json:"coin_id"`
 	Amount    int32        `json:"amount"`
 	CreatedAt sql.NullTime `json:"created_at"`
 }
 
 type CoinTransfer struct {
-	ID        int64        `json:"id"`
-	FromUid   int64        `json:"from_uid"`
-	ToUid     int64        `json:"to_uid"`
-	Amount    int32        `json:"amount"`
-	CreatedAt sql.NullTime `json:"created_at"`
-}
-
-type DailyCoinClaim struct {
-	ID          int64        `json:"id"`
-	Uid         int64        `json:"uid"`
-	ClaimedDate time.Time    `json:"claimed_date"`
-	ClaimedAt   sql.NullTime `json:"claimed_at"`
+	ID         int64        `json:"id"`
+	FromCoinID int64        `json:"from_coin_id"`
+	ToCoinID   int64        `json:"to_coin_id"`
+	Amount     int32        `json:"amount"`
+	CreatedAt  sql.NullTime `json:"created_at"`
 }
 
 type FollowRelationship struct {

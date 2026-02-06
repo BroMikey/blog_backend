@@ -32,3 +32,20 @@ func RandomUsername() string {
 func RandomPassword() string {
 	return RandomString(12)
 }
+
+// RandomAmount 生成随机金额（正负数都支持）
+func RandomAmount(min, max int32) int32 {
+	return min + int32(rng.Int31n(max-min+1))
+}
+
+// RandomPositiveAmount 生成正数金额
+func RandomPositiveAmount() int32 {
+	return RandomAmount(1, 10000)
+}
+
+func RandomCoinType() string {
+	coin_type := []string{"penny", "nickel", "dime"}
+	// 1 5 10美分
+	n := len(coin_type)
+	return coin_type[rand.Intn(n)]
+}

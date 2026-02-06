@@ -7,111 +7,130 @@ package db
 
 import (
 	"context"
-	"database/sql"
 )
 
 const addCoinBalance = `-- name: AddCoinBalance :one
-UPDATE coin SET balance = balance + $1, updated_at = NOW() WHERE uid = $2 RETURNING id, uid, balance, created_at, updated_at
+UPDATE coin
+SET balance = balance + $1
+WHERE id = $2
+RETURNING id, uid, balance, coin_type, created_at, updated_at
 `
 
 type AddCoinBalanceParams struct {
-	Balance int32 `json:"balance"`
-	Uid     int64 `json:"uid"`
+	Amount int32 `json:"amount"`
+	ID     int64 `json:"id"`
 }
 
 // 增加硬币余额
 func (q *Queries) AddCoinBalance(ctx context.Context, arg AddCoinBalanceParams) (Coin, error) {
-	row := q.db.QueryRowContext(ctx, addCoinBalance, arg.Balance, arg.Uid)
+	row := q.db.QueryRowContext(ctx, addCoinBalance, arg.Amount, arg.ID)
 	var i Coin
 	err := row.Scan(
 		&i.ID,
 		&i.Uid,
 		&i.Balance,
+		&i.CoinType,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
 	return i, err
-}
-
-const coinExists = `-- name: CoinExists :one
-SELECT EXISTS(SELECT 1 FROM coin WHERE uid = $1)
-`
-
-// 检查用户是否存在硬币钱包
-func (q *Queries) CoinExists(ctx context.Context, uid int64) (bool, error) {
-	row := q.db.QueryRowContext(ctx, coinExists, uid)
-	var exists bool
-	err := row.Scan(&exists)
-	return exists, err
 }
 
 const createCoin = `-- name: CreateCoin :one
-INSERT INTO coin (uid, balance) VALUES ($1, 0) RETURNING id, uid, balance, created_at, updated_at
+INSERT INTO coin (
+    uid,
+    balance,
+    coin_type
+)
+VALUES (
+    $1, $2, $3
+) RETURNING id, uid, balance, coin_type, created_at, updated_at
 `
 
+type CreateCoinParams struct {
+	Uid      int64  `json:"uid"`
+	Balance  int32  `json:"balance"`
+	CoinType string `json:"coin_type"`
+}
+
 // 创建用户硬币钱包
-func (q *Queries) CreateCoin(ctx context.Context, uid int64) (Coin, error) {
-	row := q.db.QueryRowContext(ctx, createCoin, uid)
+func (q *Queries) CreateCoin(ctx context.Context, arg CreateCoinParams) (Coin, error) {
+	row := q.db.QueryRowContext(ctx, createCoin, arg.Uid, arg.Balance, arg.CoinType)
 	var i Coin
 	err := row.Scan(
 		&i.ID,
 		&i.Uid,
 		&i.Balance,
+		&i.CoinType,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
 	return i, err
 }
 
-const createDailyClaimRecord = `-- name: CreateDailyClaimRecord :one
-INSERT INTO daily_coin_claim (uid, claimed_date) VALUES ($1, CURRENT_DATE) RETURNING id, uid, claimed_date, claimed_at
+const deleteCoin = `-- name: DeleteCoin :exec
+DELETE FROM coin
+WHERE id = $1
 `
 
-// 记录今日硬币领取
-func (q *Queries) CreateDailyClaimRecord(ctx context.Context, uid int64) (DailyCoinClaim, error) {
-	row := q.db.QueryRowContext(ctx, createDailyClaimRecord, uid)
-	var i DailyCoinClaim
+// 删除硬币账户
+func (q *Queries) DeleteCoin(ctx context.Context, id int64) error {
+	_, err := q.db.ExecContext(ctx, deleteCoin, id)
+	return err
+}
+
+const getCoin = `-- name: GetCoin :one
+SELECT id, uid, balance, coin_type, created_at, updated_at 
+FROM coin 
+WHERE id = $1
+`
+
+// 获取用户的硬币余额
+func (q *Queries) GetCoin(ctx context.Context, id int64) (Coin, error) {
+	row := q.db.QueryRowContext(ctx, getCoin, id)
+	var i Coin
 	err := row.Scan(
 		&i.ID,
 		&i.Uid,
-		&i.ClaimedDate,
-		&i.ClaimedAt,
+		&i.Balance,
+		&i.CoinType,
+		&i.CreatedAt,
+		&i.UpdatedAt,
 	)
 	return i, err
 }
 
-const getAllCoins = `-- name: GetAllCoins :many
-SELECT c.id, c.uid, c.balance, c.created_at, c.updated_at, u.username FROM coin c
-JOIN users u ON c.uid = u.uid
-ORDER BY c.balance DESC
+const listCoin = `-- name: ListCoin :many
+SELECT id, uid, balance, coin_type, created_at, updated_at FROM coin
+WHERE uid = $1
+ORDER BY id
+LIMIT $2
+OFFSET $3
 `
 
-type GetAllCoinsRow struct {
-	ID        int64        `json:"id"`
-	Uid       int64        `json:"uid"`
-	Balance   int32        `json:"balance"`
-	CreatedAt sql.NullTime `json:"created_at"`
-	UpdatedAt sql.NullTime `json:"updated_at"`
-	Username  string       `json:"username"`
+type ListCoinParams struct {
+	Uid    int64 `json:"uid"`
+	Limit  int32 `json:"limit"`
+	Offset int32 `json:"offset"`
 }
 
-// 获取所有硬币信息
-func (q *Queries) GetAllCoins(ctx context.Context) ([]GetAllCoinsRow, error) {
-	rows, err := q.db.QueryContext(ctx, getAllCoins)
+// 列出用户的账号
+func (q *Queries) ListCoin(ctx context.Context, arg ListCoinParams) ([]Coin, error) {
+	rows, err := q.db.QueryContext(ctx, listCoin, arg.Uid, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []GetAllCoinsRow{}
+	items := []Coin{}
 	for rows.Next() {
-		var i GetAllCoinsRow
+		var i Coin
 		if err := rows.Scan(
 			&i.ID,
 			&i.Uid,
 			&i.Balance,
+			&i.CoinType,
 			&i.CreatedAt,
 			&i.UpdatedAt,
-			&i.Username,
 		); err != nil {
 			return nil, err
 		}
@@ -126,93 +145,27 @@ func (q *Queries) GetAllCoins(ctx context.Context) ([]GetAllCoinsRow, error) {
 	return items, nil
 }
 
-const getCoinBalance = `-- name: GetCoinBalance :one
-SELECT balance FROM coin WHERE uid = $1
+const updateCoin = `-- name: UpdateCoin :one
+UPDATE coin
+SET balance = $2
+WHERE id = $1
+RETURNING id, uid, balance, coin_type, created_at, updated_at
 `
 
-// 获取用户的硬币余额
-func (q *Queries) GetCoinBalance(ctx context.Context, uid int64) (int32, error) {
-	row := q.db.QueryRowContext(ctx, getCoinBalance, uid)
-	var balance int32
-	err := row.Scan(&balance)
-	return balance, err
-}
-
-const getDailyClaimCount = `-- name: GetDailyClaimCount :one
-SELECT COUNT(*) FROM daily_coin_claim WHERE uid = $1
-`
-
-// 获取用户每日领取总数
-func (q *Queries) GetDailyClaimCount(ctx context.Context, uid int64) (int64, error) {
-	row := q.db.QueryRowContext(ctx, getDailyClaimCount, uid)
-	var count int64
-	err := row.Scan(&count)
-	return count, err
-}
-
-const getTodayCoinClaim = `-- name: GetTodayCoinClaim :one
-SELECT id, uid, claimed_date, claimed_at FROM daily_coin_claim WHERE uid = $1 AND claimed_date = CURRENT_DATE
-`
-
-// 检查用户今天是否已领取硬币
-func (q *Queries) GetTodayCoinClaim(ctx context.Context, uid int64) (DailyCoinClaim, error) {
-	row := q.db.QueryRowContext(ctx, getTodayCoinClaim, uid)
-	var i DailyCoinClaim
-	err := row.Scan(
-		&i.ID,
-		&i.Uid,
-		&i.ClaimedDate,
-		&i.ClaimedAt,
-	)
-	return i, err
-}
-
-const getUserCoinStats = `-- name: GetUserCoinStats :one
-SELECT
-    uid,
-    balance,
-    created_at,
-    updated_at
-FROM coin WHERE uid = $1
-`
-
-type GetUserCoinStatsRow struct {
-	Uid       int64        `json:"uid"`
-	Balance   int32        `json:"balance"`
-	CreatedAt sql.NullTime `json:"created_at"`
-	UpdatedAt sql.NullTime `json:"updated_at"`
-}
-
-// 获取用户的交易统计
-func (q *Queries) GetUserCoinStats(ctx context.Context, uid int64) (GetUserCoinStatsRow, error) {
-	row := q.db.QueryRowContext(ctx, getUserCoinStats, uid)
-	var i GetUserCoinStatsRow
-	err := row.Scan(
-		&i.Uid,
-		&i.Balance,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-	)
-	return i, err
-}
-
-const reduceCoinBalance = `-- name: ReduceCoinBalance :one
-UPDATE coin SET balance = balance - $1, updated_at = NOW() WHERE uid = $2 AND balance >= $1 RETURNING id, uid, balance, created_at, updated_at
-`
-
-type ReduceCoinBalanceParams struct {
+type UpdateCoinParams struct {
+	ID      int64 `json:"id"`
 	Balance int32 `json:"balance"`
-	Uid     int64 `json:"uid"`
 }
 
-// 减少硬币余额
-func (q *Queries) ReduceCoinBalance(ctx context.Context, arg ReduceCoinBalanceParams) (Coin, error) {
-	row := q.db.QueryRowContext(ctx, reduceCoinBalance, arg.Balance, arg.Uid)
+// 更新用户硬币余额
+func (q *Queries) UpdateCoin(ctx context.Context, arg UpdateCoinParams) (Coin, error) {
+	row := q.db.QueryRowContext(ctx, updateCoin, arg.ID, arg.Balance)
 	var i Coin
 	err := row.Scan(
 		&i.ID,
 		&i.Uid,
 		&i.Balance,
+		&i.CoinType,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)

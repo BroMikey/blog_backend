@@ -1,5 +1,5 @@
-DROP TABLE IF EXISTS coin_transaction;
-DROP TABLE IF EXISTS daily_coin_claim;
+DROP TABLE IF EXISTS coin_transfer;
+DROP TABLE IF EXISTS coin_entry;
 DROP TABLE IF EXISTS coin;
 
 ALTER TABLE follow_relationship

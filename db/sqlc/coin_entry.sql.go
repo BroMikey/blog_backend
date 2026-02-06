@@ -10,21 +10,21 @@ import (
 )
 
 const createCoinEntry = `-- name: CreateCoinEntry :one
-INSERT INTO coin_entry (uid, amount) VALUES ($1, $2) RETURNING id, uid, amount, created_at
+INSERT INTO coin_entry (coin_id, amount) VALUES ($1, $2) RETURNING id, coin_id, amount, created_at
 `
 
 type CreateCoinEntryParams struct {
-	Uid    int64 `json:"uid"`
+	CoinID int64 `json:"coin_id"`
 	Amount int32 `json:"amount"`
 }
 
 // 创建硬币entry记录
 func (q *Queries) CreateCoinEntry(ctx context.Context, arg CreateCoinEntryParams) (CoinEntry, error) {
-	row := q.db.QueryRowContext(ctx, createCoinEntry, arg.Uid, arg.Amount)
+	row := q.db.QueryRowContext(ctx, createCoinEntry, arg.CoinID, arg.Amount)
 	var i CoinEntry
 	err := row.Scan(
 		&i.ID,
-		&i.Uid,
+		&i.CoinID,
 		&i.Amount,
 		&i.CreatedAt,
 	)
@@ -32,7 +32,7 @@ func (q *Queries) CreateCoinEntry(ctx context.Context, arg CreateCoinEntryParams
 }
 
 const getCoinEntry = `-- name: GetCoinEntry :one
-SELECT id, uid, amount, created_at FROM coin_entry
+SELECT id, coin_id, amount, created_at FROM coin_entry
 WHERE id = $1 LIMIT 1
 `
 
@@ -42,7 +42,7 @@ func (q *Queries) GetCoinEntry(ctx context.Context, id int64) (CoinEntry, error)
 	var i CoinEntry
 	err := row.Scan(
 		&i.ID,
-		&i.Uid,
+		&i.CoinID,
 		&i.Amount,
 		&i.CreatedAt,
 	)
@@ -50,33 +50,33 @@ func (q *Queries) GetCoinEntry(ctx context.Context, id int64) (CoinEntry, error)
 }
 
 const getCoinEntryCount = `-- name: GetCoinEntryCount :one
-SELECT COUNT(*) FROM coin_entry WHERE uid = $1
+SELECT COUNT(*) FROM coin_entry WHERE coin_id = $1
 `
 
 // 获取用户的硬币entry总数
-func (q *Queries) GetCoinEntryCount(ctx context.Context, uid int64) (int64, error) {
-	row := q.db.QueryRowContext(ctx, getCoinEntryCount, uid)
+func (q *Queries) GetCoinEntryCount(ctx context.Context, coinID int64) (int64, error) {
+	row := q.db.QueryRowContext(ctx, getCoinEntryCount, coinID)
 	var count int64
 	err := row.Scan(&count)
 	return count, err
 }
 
 const listEntries = `-- name: ListEntries :many
-SELECT id, uid, amount, created_at FROM coin_entry
-WHERE uid = $1
+SELECT id, coin_id, amount, created_at FROM coin_entry
+WHERE coin_id = $1
 ORDER BY id
 LIMIT $2
 OFFSET $3
 `
 
 type ListEntriesParams struct {
-	Uid    int64 `json:"uid"`
+	CoinID int64 `json:"coin_id"`
 	Limit  int32 `json:"limit"`
 	Offset int32 `json:"offset"`
 }
 
 func (q *Queries) ListEntries(ctx context.Context, arg ListEntriesParams) ([]CoinEntry, error) {
-	rows, err := q.db.QueryContext(ctx, listEntries, arg.Uid, arg.Limit, arg.Offset)
+	rows, err := q.db.QueryContext(ctx, listEntries, arg.CoinID, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}
@@ -86,7 +86,7 @@ func (q *Queries) ListEntries(ctx context.Context, arg ListEntriesParams) ([]Coi
 		var i CoinEntry
 		if err := rows.Scan(
 			&i.ID,
-			&i.Uid,
+			&i.CoinID,
 			&i.Amount,
 			&i.CreatedAt,
 		); err != nil {
