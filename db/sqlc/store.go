@@ -35,3 +35,9 @@ func (store *Store) execTx(ctx context.Context, fn func(*Queries) error) error {
 	}
 	return tx.Commit()
 }
+
+type CoinTransferTxParams struct {
+	FromUid int64 `json:"from_uid"`
+	ToUid   int64 `json:"to_uid"`
+	Amount  int64 `json:"amount"`
+}

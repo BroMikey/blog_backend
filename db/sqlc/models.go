@@ -70,13 +70,19 @@ type Coin struct {
 	UpdatedAt sql.NullTime `json:"updated_at"`
 }
 
-type CoinTransaction struct {
-	ID              int64        `json:"id"`
-	FromUid         int64        `json:"from_uid"`
-	ToUid           int64        `json:"to_uid"`
-	Amount          int32        `json:"amount"`
-	TransactionType string       `json:"transaction_type"`
-	CreatedAt       sql.NullTime `json:"created_at"`
+type CoinEntry struct {
+	ID        int64        `json:"id"`
+	Uid       int64        `json:"uid"`
+	Amount    int32        `json:"amount"`
+	CreatedAt sql.NullTime `json:"created_at"`
+}
+
+type CoinTransfer struct {
+	ID        int64        `json:"id"`
+	FromUid   int64        `json:"from_uid"`
+	ToUid     int64        `json:"to_uid"`
+	Amount    int32        `json:"amount"`
+	CreatedAt sql.NullTime `json:"created_at"`
 }
 
 type DailyCoinClaim struct {

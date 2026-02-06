@@ -11,7 +11,7 @@ import (
 )
 
 const addCoinBalance = `-- name: AddCoinBalance :one
-UPDATE coin SET balance = balance + $1 WHERE uid = $2 RETURNING id, uid, balance, created_at, updated_at
+UPDATE coin SET balance = balance + $1, updated_at = NOW() WHERE uid = $2 RETURNING id, uid, balance, created_at, updated_at
 `
 
 type AddCoinBalanceParams struct {
@@ -31,21 +31,6 @@ func (q *Queries) AddCoinBalance(ctx context.Context, arg AddCoinBalanceParams) 
 		&i.UpdatedAt,
 	)
 	return i, err
-}
-
-const batchTransferUpdate = `-- name: BatchTransferUpdate :exec
-UPDATE coin SET balance = balance - $2 WHERE uid = $1 AND balance >= $2
-`
-
-type BatchTransferUpdateParams struct {
-	Uid     int64 `json:"uid"`
-	Balance int32 `json:"balance"`
-}
-
-// 批量转账（减少发送方、增加接收方）
-func (q *Queries) BatchTransferUpdate(ctx context.Context, arg BatchTransferUpdateParams) error {
-	_, err := q.db.ExecContext(ctx, batchTransferUpdate, arg.Uid, arg.Balance)
-	return err
 }
 
 const coinExists = `-- name: CoinExists :one
@@ -96,8 +81,8 @@ func (q *Queries) CreateDailyClaimRecord(ctx context.Context, uid int64) (DailyC
 }
 
 const getAllCoins = `-- name: GetAllCoins :many
-SELECT c.id, c.uid, c.balance, c.created_at, c.updated_at, u.username FROM coin c 
-JOIN users u ON c.uid = u.uid 
+SELECT c.id, c.uid, c.balance, c.created_at, c.updated_at, u.username FROM coin c
+JOIN users u ON c.uid = u.uid
 ORDER BY c.balance DESC
 `
 
@@ -153,55 +138,11 @@ func (q *Queries) GetCoinBalance(ctx context.Context, uid int64) (int32, error) 
 	return balance, err
 }
 
-const getCoinTransactionHistory = `-- name: GetCoinTransactionHistory :many
-SELECT id, from_uid, to_uid, amount, transaction_type, created_at FROM coin_transaction 
-WHERE from_uid = $1 OR to_uid = $1 
-ORDER BY created_at DESC 
-LIMIT $2 OFFSET $3
-`
-
-type GetCoinTransactionHistoryParams struct {
-	FromUid int64 `json:"from_uid"`
-	Limit   int32 `json:"limit"`
-	Offset  int32 `json:"offset"`
-}
-
-// 获取硬币交易历史
-func (q *Queries) GetCoinTransactionHistory(ctx context.Context, arg GetCoinTransactionHistoryParams) ([]CoinTransaction, error) {
-	rows, err := q.db.QueryContext(ctx, getCoinTransactionHistory, arg.FromUid, arg.Limit, arg.Offset)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	items := []CoinTransaction{}
-	for rows.Next() {
-		var i CoinTransaction
-		if err := rows.Scan(
-			&i.ID,
-			&i.FromUid,
-			&i.ToUid,
-			&i.Amount,
-			&i.TransactionType,
-			&i.CreatedAt,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
 const getDailyClaimCount = `-- name: GetDailyClaimCount :one
 SELECT COUNT(*) FROM daily_coin_claim WHERE uid = $1
 `
 
-// 获取交易摘要
+// 获取用户每日领取总数
 func (q *Queries) GetDailyClaimCount(ctx context.Context, uid int64) (int64, error) {
 	row := q.db.QueryRowContext(ctx, getDailyClaimCount, uid)
 	var count int64
@@ -227,7 +168,7 @@ func (q *Queries) GetTodayCoinClaim(ctx context.Context, uid int64) (DailyCoinCl
 }
 
 const getUserCoinStats = `-- name: GetUserCoinStats :one
-SELECT 
+SELECT
     uid,
     balance,
     created_at,
@@ -256,7 +197,7 @@ func (q *Queries) GetUserCoinStats(ctx context.Context, uid int64) (GetUserCoinS
 }
 
 const reduceCoinBalance = `-- name: ReduceCoinBalance :one
-UPDATE coin SET balance = balance - $1 WHERE uid = $2 AND balance >= $1 RETURNING id, uid, balance, created_at, updated_at
+UPDATE coin SET balance = balance - $1, updated_at = NOW() WHERE uid = $2 AND balance >= $1 RETURNING id, uid, balance, created_at, updated_at
 `
 
 type ReduceCoinBalanceParams struct {
@@ -274,32 +215,6 @@ func (q *Queries) ReduceCoinBalance(ctx context.Context, arg ReduceCoinBalancePa
 		&i.Balance,
 		&i.CreatedAt,
 		&i.UpdatedAt,
-	)
-	return i, err
-}
-
-const transferCoin = `-- name: TransferCoin :one
-INSERT INTO coin_transaction (from_uid, to_uid, amount, transaction_type) 
-VALUES ($1, $2, $3, 'transfer') RETURNING id, from_uid, to_uid, amount, transaction_type, created_at
-`
-
-type TransferCoinParams struct {
-	FromUid int64 `json:"from_uid"`
-	ToUid   int64 `json:"to_uid"`
-	Amount  int32 `json:"amount"`
-}
-
-// 用户之间转账硬币
-func (q *Queries) TransferCoin(ctx context.Context, arg TransferCoinParams) (CoinTransaction, error) {
-	row := q.db.QueryRowContext(ctx, transferCoin, arg.FromUid, arg.ToUid, arg.Amount)
-	var i CoinTransaction
-	err := row.Scan(
-		&i.ID,
-		&i.FromUid,
-		&i.ToUid,
-		&i.Amount,
-		&i.TransactionType,
-		&i.CreatedAt,
 	)
 	return i, err
 }
