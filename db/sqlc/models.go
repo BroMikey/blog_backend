@@ -62,6 +62,30 @@ type Category struct {
 	CreatedAt time.Time `json:"created_at"`
 }
 
+type Coin struct {
+	ID        int64        `json:"id"`
+	Uid       int64        `json:"uid"`
+	Balance   int32        `json:"balance"`
+	CreatedAt sql.NullTime `json:"created_at"`
+	UpdatedAt sql.NullTime `json:"updated_at"`
+}
+
+type CoinTransaction struct {
+	ID              int64        `json:"id"`
+	FromUid         int64        `json:"from_uid"`
+	ToUid           int64        `json:"to_uid"`
+	Amount          int32        `json:"amount"`
+	TransactionType string       `json:"transaction_type"`
+	CreatedAt       sql.NullTime `json:"created_at"`
+}
+
+type DailyCoinClaim struct {
+	ID          int64        `json:"id"`
+	Uid         int64        `json:"uid"`
+	ClaimedDate time.Time    `json:"claimed_date"`
+	ClaimedAt   sql.NullTime `json:"claimed_at"`
+}
+
 type FollowRelationship struct {
 	ID          int64     `json:"id"`
 	FollowerUid int64     `json:"follower_uid"`
