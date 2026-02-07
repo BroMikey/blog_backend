@@ -124,7 +124,7 @@ func TestAddCoinBalance(t *testing.T) {
 	require.Equal(t, coin.Uid, updated.Uid)
 }
 
-func TestListCoin(t *testing.T) {
+func TestListCoinForUser(t *testing.T) {
 	user := createRandomUser(t)
 	defer cleanupUser(t, user.Uid)
 
@@ -145,13 +145,13 @@ func TestListCoin(t *testing.T) {
 	defer cleanupCoin(t, coin1.ID)
 	require.NoError(t, err)
 
-	args := ListCoinParams{
+	args := ListCoinsForUserParams{
 		Uid:    user.Uid,
 		Limit:  5,
 		Offset: 0,
 	}
 
-	coins, err := testQueries.ListCoin(context.Background(), args)
+	coins, err := testQueries.ListCoinsForUser(context.Background(), args)
 	require.NoError(t, err)
 	require.Len(t, coins, 2)
 
