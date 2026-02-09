@@ -1,6 +1,7 @@
 package api
 
 import (
+	"database/sql"
 	"net/http"
 
 	db "github.com/BroMikey/blog_backend/db/sqlc"
@@ -48,6 +49,10 @@ func (server *Server) getCoin(ctx *gin.Context) {
 
 	coin, err := server.store.GetCoin(ctx, req.ID)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			ctx.JSON(http.StatusNotFound, errorResponse(err))
+			return
+		}
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
