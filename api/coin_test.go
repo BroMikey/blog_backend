@@ -19,7 +19,6 @@ import (
 
 func TestGetCoin(t *testing.T) {
 	user := db.Users{}
-
 	coin := randomCoin(user)
 
 	testCases := []struct {
@@ -95,18 +94,19 @@ func TestGetCoin(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			store := mockdb.NewMockStore(ctrl)
+			mockStore := mockdb.NewMockStore(ctrl)
 			// build stubs
-			tc.buildStubs(store)
+			tc.buildStubs(mockStore)
 
-			// start server and send request
-			server := NewServer(store)
+			// start server
+			server := NewServer(mockStore)
 			recorder := httptest.NewRecorder()
 
 			url := fmt.Sprintf("/coin/%d", tc.coinID)
 			request, err := http.NewRequest(http.MethodGet, url, nil)
 			require.NoError(t, err)
 
+			// send request
 			server.router.ServeHTTP(recorder, request)
 
 			// check response

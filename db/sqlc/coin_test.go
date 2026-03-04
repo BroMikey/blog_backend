@@ -63,7 +63,7 @@ func cleanupCoin(t *testing.T, id int64) {
 
 func TestCreateCoin(t *testing.T) {
 	coin := createRandomCoin(t)
-	defer cleanupCoin(t, coin.ID)
+	// defer cleanupCoin(t, coin.ID)
 
 	// Verify the coin was created with correct initial values
 	require.NotZero(t, coin.ID)

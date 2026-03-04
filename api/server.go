@@ -20,6 +20,7 @@ func NewServer(store db.Store) *Server {
 	router.POST("/coin", server.createCoin)
 	router.GET("/coin/:id", server.getCoin)
 	router.GET("/coin", server.listCoin)
+	router.POST("/transfers", server.createCoinTransfer)
 
 	return server
 }

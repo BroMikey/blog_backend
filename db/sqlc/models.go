@@ -67,24 +67,24 @@ type Coin struct {
 	Uid     int64 `json:"uid"`
 	Balance int32 `json:"balance"`
 	// penny nickel dime
-	CoinType  string       `json:"coin_type"`
-	CreatedAt sql.NullTime `json:"created_at"`
-	UpdatedAt sql.NullTime `json:"updated_at"`
+	CoinType  string    `json:"coin_type"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
 }
 
 type CoinEntry struct {
-	ID        int64        `json:"id"`
-	CoinID    int64        `json:"coin_id"`
-	Amount    int32        `json:"amount"`
-	CreatedAt sql.NullTime `json:"created_at"`
+	ID        int64     `json:"id"`
+	CoinID    int64     `json:"coin_id"`
+	Amount    int32     `json:"amount"`
+	CreatedAt time.Time `json:"created_at"`
 }
 
 type CoinTransfer struct {
-	ID         int64        `json:"id"`
-	FromCoinID int64        `json:"from_coin_id"`
-	ToCoinID   int64        `json:"to_coin_id"`
-	Amount     int32        `json:"amount"`
-	CreatedAt  sql.NullTime `json:"created_at"`
+	ID         int64     `json:"id"`
+	FromCoinID int64     `json:"from_coin_id"`
+	ToCoinID   int64     `json:"to_coin_id"`
+	Amount     int32     `json:"amount"`
+	CreatedAt  time.Time `json:"created_at"`
 }
 
 type FollowRelationship struct {
