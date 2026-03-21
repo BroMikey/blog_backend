@@ -1,5 +1,5 @@
 # ignore the example file
-simplebank/
+simplebank
 
 # Binaries for programs and plugins
 *.exe

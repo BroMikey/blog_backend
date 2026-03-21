@@ -40,14 +40,12 @@ func tagInList(tags []Tag, id int64) bool {
 
 func TestCreateTag(t *testing.T) {
 	tag := createRandomTag(t)
-	defer cleanupTag(t, tag.ID)
 
 	require.NotZero(t, tag.ID)
 }
 
 func TestGetTagByID(t *testing.T) {
 	tag := createRandomTag(t)
-	defer cleanupTag(t, tag.ID)
 
 	fetched, err := testQueries.GetTagByID(context.Background(), tag.ID)
 	require.NoError(t, err)
@@ -57,7 +55,6 @@ func TestGetTagByID(t *testing.T) {
 
 func TestGetTagByName(t *testing.T) {
 	tag := createRandomTag(t)
-	defer cleanupTag(t, tag.ID)
 
 	fetched, err := testQueries.GetTagByName(context.Background(), tag.Name)
 	require.NoError(t, err)
@@ -67,9 +64,7 @@ func TestGetTagByName(t *testing.T) {
 
 func TestListTags(t *testing.T) {
 	tag1 := createRandomTag(t)
-	defer cleanupTag(t, tag1.ID)
 	tag2 := createRandomTag(t)
-	defer cleanupTag(t, tag2.ID)
 
 	tags, err := testQueries.ListTags(context.Background(), ListTagsParams{Limit: 10, Offset: 0})
 	require.NoError(t, err)
@@ -80,7 +75,6 @@ func TestListTags(t *testing.T) {
 
 func TestUpdateTag(t *testing.T) {
 	tag := createRandomTag(t)
-	defer cleanupTag(t, tag.ID)
 
 	newName := utils.RandomString(12)
 	updated, err := testQueries.UpdateTag(context.Background(), UpdateTagParams{ID: tag.ID, Name: newName})
