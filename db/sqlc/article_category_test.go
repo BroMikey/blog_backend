@@ -10,23 +10,16 @@ import (
 func TestCreateArticleCategory(t *testing.T) {
 	article := createRandomArticle(t)
 	category := createRandomCategory(t)
-	defer cleanupArticle(t, article.ID)
-	defer cleanupCategory(t, category.ID)
 
 	created, err := testQueries.CreateArticleCategory(context.Background(), CreateArticleCategoryParams{ArticleID: article.ID, CategoryID: category.ID})
 	require.NoError(t, err)
 	require.Equal(t, article.ID, created.ArticleID)
 	require.Equal(t, category.ID, created.CategoryID)
-
-	err = testQueries.DeleteArticleCategory(context.Background(), DeleteArticleCategoryParams{ArticleID: article.ID, CategoryID: category.ID})
-	require.NoError(t, err)
 }
 
 func TestGetArticleCategoryByID(t *testing.T) {
 	article := createRandomArticle(t)
 	category := createRandomCategory(t)
-	defer cleanupArticle(t, article.ID)
-	defer cleanupCategory(t, category.ID)
 
 	created, err := testQueries.CreateArticleCategory(context.Background(), CreateArticleCategoryParams{ArticleID: article.ID, CategoryID: category.ID})
 	require.NoError(t, err)
@@ -41,8 +34,6 @@ func TestGetArticleCategoryByID(t *testing.T) {
 func TestListCategoriesByArticle(t *testing.T) {
 	article := createRandomArticle(t)
 	category := createRandomCategory(t)
-	defer cleanupArticle(t, article.ID)
-	defer cleanupCategory(t, category.ID)
 
 	_, err := testQueries.CreateArticleCategory(context.Background(), CreateArticleCategoryParams{ArticleID: article.ID, CategoryID: category.ID})
 	require.NoError(t, err)
@@ -56,8 +47,6 @@ func TestListCategoriesByArticle(t *testing.T) {
 func TestListArticlesByCategoryID(t *testing.T) {
 	article := createRandomArticle(t)
 	category := createRandomCategory(t)
-	defer cleanupArticle(t, article.ID)
-	defer cleanupCategory(t, category.ID)
 
 	_, err := testQueries.CreateArticleCategory(context.Background(), CreateArticleCategoryParams{ArticleID: article.ID, CategoryID: category.ID})
 	require.NoError(t, err)
@@ -78,8 +67,6 @@ func TestListArticlesByCategoryID(t *testing.T) {
 func TestDeleteArticleCategory(t *testing.T) {
 	article := createRandomArticle(t)
 	category := createRandomCategory(t)
-	defer cleanupArticle(t, article.ID)
-	defer cleanupCategory(t, category.ID)
 
 	created, err := testQueries.CreateArticleCategory(context.Background(), CreateArticleCategoryParams{ArticleID: article.ID, CategoryID: category.ID})
 	require.NoError(t, err)

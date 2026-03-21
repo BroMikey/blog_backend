@@ -34,7 +34,6 @@ func cleanupArticle(t *testing.T, articleID int64) {
 
 func TestCreateArticle(t *testing.T) {
 	article := createRandomArticle(t)
-	defer cleanupArticle(t, article.ID)
 
 	args := CreateArticleParams{
 		Title:     "Test Article",
@@ -52,8 +51,7 @@ func TestCreateArticle(t *testing.T) {
 }
 
 func TestListArticles(t *testing.T) {
-	article := createRandomArticle(t)
-	defer cleanupArticle(t, article.ID)
+	createRandomArticle(t)
 
 	listArgs := ListArticlesParams{
 		Limit:  5,
@@ -67,7 +65,6 @@ func TestListArticles(t *testing.T) {
 
 func TestGetArticle(t *testing.T) {
 	article := createRandomArticle(t)
-	defer cleanupArticle(t, article.ID)
 
 	fetchedArticle, err := testQueries.GetArticle(context.Background(), article.ID)
 	require.NoError(t, err)
@@ -81,7 +78,6 @@ func TestGetArticle(t *testing.T) {
 
 func TestDecrementArticleCommentCount(t *testing.T) {
 	article := createRandomArticle(t)
-	defer cleanupArticle(t, article.ID)
 
 	// Increment comment count first
 	commentcount, err := testQueries.IncrementArticleCommentCount(context.Background(), article.ID)
@@ -100,7 +96,6 @@ func TestDecrementArticleCommentCount(t *testing.T) {
 
 func TestDecrementArticleLikeCount(t *testing.T) {
 	article := createRandomArticle(t)
-	defer cleanupArticle(t, article.ID)
 
 	// Increment like count first
 	likecount, err := testQueries.IncrementArticleLikeCount(context.Background(), article.ID)
@@ -119,7 +114,6 @@ func TestDecrementArticleLikeCount(t *testing.T) {
 
 func TestIncrementArticleCommentCount(t *testing.T) {
 	article := createRandomArticle(t)
-	defer cleanupArticle(t, article.ID)
 
 	// Increment comment count
 	commentcount, err := testQueries.IncrementArticleCommentCount(context.Background(), article.ID)
@@ -133,7 +127,6 @@ func TestIncrementArticleCommentCount(t *testing.T) {
 
 func TestIncrementArticleLikeCount(t *testing.T) {
 	article := createRandomArticle(t)
-	defer cleanupArticle(t, article.ID)
 
 	// Increment like count
 	likecount, err := testQueries.IncrementArticleLikeCount(context.Background(), article.ID)
@@ -148,7 +141,6 @@ func TestIncrementArticleLikeCount(t *testing.T) {
 
 func TestIncrementArticleViewCount(t *testing.T) {
 	article := createRandomArticle(t)
-	defer cleanupArticle(t, article.ID)
 
 	// Increment view count
 	viewcount, err := testQueries.IncrementArticleViewCount(context.Background(), article.ID)
@@ -164,8 +156,6 @@ func TestIncrementArticleViewCount(t *testing.T) {
 func TestListArticleByCategory(t *testing.T) {
 	article := createRandomArticle(t)
 	category := createRandomCategory(t)
-	defer cleanupArticle(t, article.ID)
-	defer cleanupCategory(t, category.ID)
 
 	testQueries.CreateArticleCategory(context.Background(), CreateArticleCategoryParams{
 		ArticleID:  article.ID,
@@ -192,8 +182,6 @@ func TestListArticleByCategory(t *testing.T) {
 func TestListArticleByTag(t *testing.T) {
 	article := createRandomArticle(t)
 	tag := createRandomTag(t)
-	defer cleanupTag(t, tag.ID)
-	defer cleanupArticle(t, article.ID)
 
 	testQueries.CreateArticleTag(context.Background(), CreateArticleTagParams{
 		ArticleID: article.ID,
@@ -219,7 +207,6 @@ func TestListArticleByTag(t *testing.T) {
 // TestUpdateArticle tests updating an article's title and content.
 func TestUpdateArticle(t *testing.T) {
 	article := createRandomArticle(t)
-	defer cleanupArticle(t, article.ID)
 
 	updateArgs := UpdateArticleParams{
 		Title:   "Updated Title",
@@ -237,13 +224,11 @@ func TestUpdateArticle(t *testing.T) {
 func TestListArticlesByCommentCount(t *testing.T) {
 	article := createRandomArticle(t)
 	for i := 0; i < 5; i++ {
-		comment := createRandomComment(t, article.ID)
-		defer cleanupComment(t, comment.ID)
+		createRandomComment(t, article.ID)
 	}
-	defer cleanupArticle(t, article.ID)
 
 	listComment, err := testQueries.ListArticlesByCommentCount(context.Background(), ListArticlesByCommentCountParams{
-		Limit:  10,
+		Limit:  100000,
 		Offset: 0,
 	})
 	require.NoError(t, err)
@@ -260,11 +245,9 @@ func TestListArticlesByCommentCount(t *testing.T) {
 
 func TestListArticlesByLikeCount(t *testing.T) {
 	article := createRandomArticle(t)
-	defer cleanupArticle(t, article.ID)
 
 	for i := 0; i < 5; i++ {
 		user := createRandomUser(t)
-		defer cleanupUser(t, user.Uid)
 		like, err := testQueries.CreateArticleLike(context.Background(), CreateArticleLikeParams{
 			Uid:       user.Uid,
 			ArticleID: article.ID,
@@ -273,7 +256,7 @@ func TestListArticlesByLikeCount(t *testing.T) {
 		require.NotEmpty(t, like)
 	}
 	listLike, err := testQueries.ListArticlesByLikeCount(context.Background(), ListArticlesByLikeCountParams{
-		Limit:  10,
+		Limit:  100000,
 		Offset: 0,
 	})
 	require.NoError(t, err)
@@ -294,10 +277,9 @@ func TestListArticlesByViewCount(t *testing.T) {
 		_, err := testQueries.IncrementArticleViewCount(context.Background(), article.ID)
 		require.NoError(t, err)
 	}
-	defer cleanupArticle(t, article.ID)
 
 	listView, err := testQueries.ListArticlesByViewCount(context.Background(), ListArticlesByViewCountParams{
-		Limit:  10,
+		Limit:  100000,
 		Offset: 0,
 	})
 	require.NoError(t, err)

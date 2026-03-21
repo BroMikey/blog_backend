@@ -7,19 +7,24 @@ import (
 )
 
 // store provides all functions to execute db queries and transactions
-type Store struct {
-	*Queries
-	db *sql.DB
+type Store interface {
+	Querier
+	CoinTransferTx(ctx context.Context, arg CoinTransferTxParams) (CoinTransferTxResult, error)
 }
 
-func NewStore(db *sql.DB) *Store {
-	return &Store{
+type SQLStore struct {
+	db *sql.DB
+	*Queries
+}
+
+func NewStore(db *sql.DB) Store {
+	return &SQLStore{
 		db:      db,
 		Queries: New(db),
 	}
 }
 
-func (store *Store) execTx(ctx context.Context, fn func(*Queries) error) error {
+func (store *SQLStore) execTx(ctx context.Context, fn func(*Queries) error) error {
 	tx, err := store.db.BeginTx(ctx, nil)
 	if err != nil {
 		return err
@@ -39,7 +44,7 @@ func (store *Store) execTx(ctx context.Context, fn func(*Queries) error) error {
 // 泛型写法，不如闭包写法优雅
 type TxFunc[R any] func(*Queries) (R, error)
 
-func execTxGeneric[R any](ctx context.Context, store *Store, fn TxFunc[R]) (R, error) {
+func execTxGeneric[R any](ctx context.Context, store *SQLStore, fn TxFunc[R]) (R, error) {
 	var result R
 
 	tx, err := store.db.BeginTx(ctx, nil)
@@ -81,7 +86,7 @@ type CoinTransferTxResult struct {
 
 // CoinTransferTx 执行转账的Transfer事务
 // 创建transfer， 然后创建两个entry，最后修改两个账号的balance
-func (store *Store) CoinTransferTx(ctx context.Context, arg CoinTransferTxParams) (CoinTransferTxResult, error) {
+func (store *SQLStore) CoinTransferTx(ctx context.Context, arg CoinTransferTxParams) (CoinTransferTxResult, error) {
 	var result CoinTransferTxResult
 	err := store.execTx(ctx, func(q *Queries) error {
 		var err error

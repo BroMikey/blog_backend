@@ -1,4 +1,4 @@
--- Drop tables in reverse order of creation (respecting dependencies
+-- Drop tables in reverse order of creation (respecting dependencies)
 DROP TABLE IF EXISTS article_comment;
 DROP TABLE IF EXISTS article_like;
 DROP TABLE IF EXISTS article_tag;

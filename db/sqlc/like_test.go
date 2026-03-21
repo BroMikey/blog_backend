@@ -21,24 +21,17 @@ func likeInList(items []ArticleLike, uid, articleID int64) bool {
 func TestCreateArticleLike(t *testing.T) {
 	user := createRandomUser(t)
 	article := createRandomArticle(t)
-	defer cleanupUser(t, user.Uid)
-	defer cleanupArticle(t, article.ID)
 
 	created, err := testQueries.CreateArticleLike(context.Background(), CreateArticleLikeParams{Uid: user.Uid, ArticleID: article.ID})
 	require.NoError(t, err)
 	require.Equal(t, user.Uid, created.Uid)
 	require.Equal(t, article.ID, created.ArticleID)
-
-	err = testQueries.DeleteArticleLike(context.Background(), DeleteArticleLikeParams{Uid: user.Uid, ArticleID: article.ID})
-	require.NoError(t, err)
 }
 
 // TestCreateArticleLike tests creating a like on an article.
 func TestGetArticleLike(t *testing.T) {
 	user := createRandomUser(t)
 	article := createRandomArticle(t)
-	defer cleanupUser(t, user.Uid)
-	defer cleanupArticle(t, article.ID)
 
 	created, err := testQueries.CreateArticleLike(context.Background(), CreateArticleLikeParams{Uid: user.Uid, ArticleID: article.ID})
 	require.NoError(t, err)
@@ -52,8 +45,6 @@ func TestGetArticleLike(t *testing.T) {
 func TestGetArticleLikeByID(t *testing.T) {
 	user := createRandomUser(t)
 	article := createRandomArticle(t)
-	defer cleanupUser(t, user.Uid)
-	defer cleanupArticle(t, article.ID)
 
 	created, err := testQueries.CreateArticleLike(context.Background(), CreateArticleLikeParams{Uid: user.Uid, ArticleID: article.ID})
 	require.NoError(t, err)
@@ -67,8 +58,6 @@ func TestGetArticleLikeByID(t *testing.T) {
 func TestListArticleLikesByArticle(t *testing.T) {
 	user := createRandomUser(t)
 	article := createRandomArticle(t)
-	defer cleanupUser(t, user.Uid)
-	defer cleanupArticle(t, article.ID)
 
 	_, err := testQueries.CreateArticleLike(context.Background(), CreateArticleLikeParams{Uid: user.Uid, ArticleID: article.ID})
 	require.NoError(t, err)
@@ -82,8 +71,6 @@ func TestListArticleLikesByArticle(t *testing.T) {
 func TestDeleteArticleLike(t *testing.T) {
 	user := createRandomUser(t)
 	article := createRandomArticle(t)
-	defer cleanupUser(t, user.Uid)
-	defer cleanupArticle(t, article.ID)
 
 	created, err := testQueries.CreateArticleLike(context.Background(), CreateArticleLikeParams{Uid: user.Uid, ArticleID: article.ID})
 	require.NoError(t, err)

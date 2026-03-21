@@ -63,7 +63,6 @@ func cleanupCoin(t *testing.T, id int64) {
 
 func TestCreateCoin(t *testing.T) {
 	coin := createRandomCoin(t)
-	defer cleanupCoin(t, coin.ID)
 
 	// Verify the coin was created with correct initial values
 	require.NotZero(t, coin.ID)
@@ -73,7 +72,6 @@ func TestCreateCoin(t *testing.T) {
 
 func TestGetCoin(t *testing.T) {
 	createdCoin := createRandomCoin(t)
-	defer cleanupCoin(t, createdCoin.ID)
 
 	fetchedCoin, err := testQueries.GetCoin(context.Background(), createdCoin.ID)
 	require.NoError(t, err)
@@ -86,7 +84,6 @@ func TestGetCoin(t *testing.T) {
 
 func TestUpdateCoin(t *testing.T) {
 	coin := createRandomCoin(t)
-	defer cleanupCoin(t, coin.ID)
 
 	newBalance := utils.RandomPositiveAmount()
 
@@ -106,7 +103,6 @@ func TestUpdateCoin(t *testing.T) {
 
 func TestAddCoinBalance(t *testing.T) {
 	coin := createRandomCoin(t)
-	defer cleanupCoin(t, coin.ID)
 
 	// 测试添加正数金额
 	addAmount := utils.RandomPositiveAmount()
@@ -126,15 +122,13 @@ func TestAddCoinBalance(t *testing.T) {
 
 func TestListCoinForUser(t *testing.T) {
 	user := createRandomUser(t)
-	defer cleanupUser(t, user.Uid)
 
 	// 为该用户创建多个 coin 记录
-	coin1, err := testQueries.CreateCoin(context.Background(), CreateCoinParams{
+	_, err := testQueries.CreateCoin(context.Background(), CreateCoinParams{
 		Uid:      user.Uid,
 		Balance:  utils.RandomPositiveAmount(),
 		CoinType: "penny",
 	})
-	defer cleanupCoin(t, coin1.ID)
 	require.NoError(t, err)
 
 	_, err = testQueries.CreateCoin(context.Background(), CreateCoinParams{
@@ -142,7 +136,6 @@ func TestListCoinForUser(t *testing.T) {
 		Balance:  utils.RandomPositiveAmount(),
 		CoinType: "dime",
 	})
-	defer cleanupCoin(t, coin1.ID)
 	require.NoError(t, err)
 
 	args := ListCoinsForUserParams{
@@ -164,18 +157,15 @@ func TestListCoinForUser(t *testing.T) {
 func TestDeleteCoin(t *testing.T) {
 	coin := createRandomCoin(t)
 
-	// 删除 coin
 	err := testQueries.DeleteCoin(context.Background(), coin.ID)
 	require.NoError(t, err)
 
-	// 验证 coin 已被删除
 	_, err = testQueries.GetCoin(context.Background(), coin.ID)
 	require.Error(t, err)
 }
 
 func TestCreateCoinWithSameUidAndCoinType(t *testing.T) {
 	user := createRandomUser(t)
-	defer cleanupUser(t, user.Uid)
 
 	// 为用户创建一个特定类型的 coin
 	arg1 := CreateCoinParams{
@@ -186,7 +176,6 @@ func TestCreateCoinWithSameUidAndCoinType(t *testing.T) {
 	coin1, err := testQueries.CreateCoin(context.Background(), arg1)
 	require.NoError(t, err)
 	require.NotEmpty(t, coin1)
-	defer cleanupCoin(t, coin1.ID)
 
 	// 尝试创建相同 uid 和 coin_type 的 coin，应该失败
 	arg2 := CreateCoinParams{

@@ -35,10 +35,8 @@ func cleanupComment(t *testing.T, commentID int64) {
 
 func TestCreateComment(t *testing.T) {
 	article := createRandomArticle(t)
-	defer cleanupArticle(t, article.ID)
 
 	comment := createRandomComment(t, article.ID)
-	defer cleanupComment(t, comment.ID)
 
 	args := CreateCommentParams{
 		ArticleID: article.ID,
@@ -59,7 +57,6 @@ func TestCreateComment(t *testing.T) {
 
 func TestDeleteComment(t *testing.T) {
 	article := createRandomArticle(t)
-	defer cleanupArticle(t, article.ID)
 
 	comment := createRandomComment(t, article.ID)
 
@@ -73,10 +70,8 @@ func TestDeleteComment(t *testing.T) {
 
 func TestGetComment(t *testing.T) {
 	article := createRandomArticle(t)
-	defer cleanupArticle(t, article.ID)
 
 	comment := createRandomComment(t, article.ID)
-	defer cleanupComment(t, comment.ID)
 
 	fetchedComment, err := testQueries.GetComment(context.Background(), comment.ID)
 	require.NoError(t, err)
@@ -91,12 +86,10 @@ func TestGetComment(t *testing.T) {
 
 func TestListComments(t *testing.T) {
 	article := createRandomArticle(t)
-	defer cleanupArticle(t, article.ID)
 
 	// Create multiple test comments for pagination testing
 	for i := 0; i < 10; i++ {
-		comment := createRandomComment(t, article.ID)
-		defer cleanupComment(t, comment.ID)
+		createRandomComment(t, article.ID)
 	}
 
 	listArgs := ListCommentsParams{

@@ -45,7 +45,6 @@ func cleanupUser(t *testing.T, uid int64) {
 
 func TestCreateUser(t *testing.T) {
 	user := createRandomUser(t)
-	defer cleanupUser(t, user.Uid)
 
 	// Verify the user was created with correct initial values
 	require.NotZero(t, user.Uid)
@@ -56,7 +55,6 @@ func TestCreateUser(t *testing.T) {
 
 func TestGetUser(t *testing.T) {
 	createdUser := createRandomUser(t)
-	defer cleanupUser(t, createdUser.Uid)
 
 	fetchedUser, err := testQueries.GetUser(context.Background(), createdUser.Uid)
 	require.NoError(t, err)
@@ -76,8 +74,7 @@ func TestListUsers(t *testing.T) {
 
 	// Create multiple test users for pagination testing
 	for i := 0; i < 10; i++ {
-		user := createRandomUser(t)
-		defer cleanupUser(t, user.Uid)
+		createRandomUser(t)
 	}
 
 	// Call ListUsers for pagination test
@@ -99,7 +96,6 @@ func TestListUsers(t *testing.T) {
 
 func TestUpdateUser(t *testing.T) {
 	user := createRandomUser(t)
-	defer cleanupUser(t, user.Uid)
 
 	// Update email and bio
 	newEmail := utils.RandomEmail()

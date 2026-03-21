@@ -19,23 +19,16 @@ func followInList(items []FollowRelationship, followerID, followedID int64) bool
 func TestCreateFollowRelationship(t *testing.T) {
 	follower := createRandomUser(t)
 	followed := createRandomUser(t)
-	defer cleanupUser(t, follower.Uid)
-	defer cleanupUser(t, followed.Uid)
 
 	created, err := testQueries.CreateFollowRelationship(context.Background(), CreateFollowRelationshipParams{FollowerUid: follower.Uid, FollowedUid: followed.Uid})
 	require.NoError(t, err)
 	require.Equal(t, follower.Uid, created.FollowerUid)
 	require.Equal(t, followed.Uid, created.FollowedUid)
-
-	err = testQueries.DeleteFollowRelationship(context.Background(), DeleteFollowRelationshipParams{FollowerUid: follower.Uid, FollowedUid: followed.Uid})
-	require.NoError(t, err)
 }
 
 func TestGetFollowRelationship(t *testing.T) {
 	follower := createRandomUser(t)
 	followed := createRandomUser(t)
-	defer cleanupUser(t, follower.Uid)
-	defer cleanupUser(t, followed.Uid)
 
 	created, err := testQueries.CreateFollowRelationship(context.Background(), CreateFollowRelationshipParams{FollowerUid: follower.Uid, FollowedUid: followed.Uid})
 	require.NoError(t, err)
@@ -50,8 +43,6 @@ func TestGetFollowRelationship(t *testing.T) {
 func TestGetFollowRelationshipByID(t *testing.T) {
 	follower := createRandomUser(t)
 	followed := createRandomUser(t)
-	defer cleanupUser(t, follower.Uid)
-	defer cleanupUser(t, followed.Uid)
 
 	created, err := testQueries.CreateFollowRelationship(context.Background(), CreateFollowRelationshipParams{FollowerUid: follower.Uid, FollowedUid: followed.Uid})
 	require.NoError(t, err)
@@ -64,8 +55,6 @@ func TestGetFollowRelationshipByID(t *testing.T) {
 func TestListFollowersAndFollowing(t *testing.T) {
 	follower := createRandomUser(t)
 	followed := createRandomUser(t)
-	defer cleanupUser(t, follower.Uid)
-	defer cleanupUser(t, followed.Uid)
 
 	_, err := testQueries.CreateFollowRelationship(context.Background(), CreateFollowRelationshipParams{FollowerUid: follower.Uid, FollowedUid: followed.Uid})
 	require.NoError(t, err)
@@ -82,8 +71,6 @@ func TestListFollowersAndFollowing(t *testing.T) {
 func TestDeleteFollowRelationship(t *testing.T) {
 	follower := createRandomUser(t)
 	followed := createRandomUser(t)
-	defer cleanupUser(t, follower.Uid)
-	defer cleanupUser(t, followed.Uid)
 
 	created, err := testQueries.CreateFollowRelationship(context.Background(), CreateFollowRelationshipParams{FollowerUid: follower.Uid, FollowedUid: followed.Uid})
 	require.NoError(t, err)

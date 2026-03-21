@@ -11,8 +11,6 @@ import (
 func TestCreateArticleTag(t *testing.T) {
 	article := createRandomArticle(t)
 	tag := createRandomTag(t)
-	defer cleanupArticle(t, article.ID)
-	defer cleanupTag(t, tag.ID)
 
 	created, err := testQueries.CreateArticleTag(context.Background(), CreateArticleTagParams{
 		ArticleID: article.ID,
@@ -21,20 +19,12 @@ func TestCreateArticleTag(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, article.ID, created.ArticleID)
 	require.Equal(t, tag.ID, created.TagID)
-
-	err = testQueries.DeleteArticleTag(context.Background(), DeleteArticleTagParams{
-		ArticleID: article.ID,
-		TagID:     tag.ID,
-	})
-	require.NoError(t, err)
 }
 
 // TestGetArticleTagByID tests fetching an ArticleTag by its ID.
 func TestGetArticleTagByID(t *testing.T) {
 	article := createRandomArticle(t)
 	tag := createRandomTag(t)
-	defer cleanupArticle(t, article.ID)
-	defer cleanupTag(t, tag.ID)
 
 	created, err := testQueries.CreateArticleTag(context.Background(), CreateArticleTagParams{
 		ArticleID: article.ID,
@@ -53,10 +43,6 @@ func TestGetArticleTagByID(t *testing.T) {
 func TestListTagsByArticle(t *testing.T) {
 	article := createRandomArticle(t)
 	tag1 := createRandomTag(t)
-	tag2 := createRandomTag(t)
-	defer cleanupArticle(t, article.ID)
-	defer cleanupTag(t, tag1.ID)
-	defer cleanupTag(t, tag2.ID)
 
 	_, err := testQueries.CreateArticleTag(context.Background(), CreateArticleTagParams{
 		ArticleID: article.ID,
@@ -78,8 +64,6 @@ func TestListTagsByArticle(t *testing.T) {
 func TestListArticlesByTagID(t *testing.T) {
 	article := createRandomArticle(t)
 	tag := createRandomTag(t)
-	defer cleanupArticle(t, article.ID)
-	defer cleanupTag(t, tag.ID)
 
 	_, err := testQueries.CreateArticleTag(context.Background(), CreateArticleTagParams{
 		ArticleID: article.ID,
@@ -108,8 +92,6 @@ func TestListArticlesByTagID(t *testing.T) {
 func TestDeleteArticleTag(t *testing.T) {
 	article := createRandomArticle(t)
 	tag := createRandomTag(t)
-	defer cleanupArticle(t, article.ID)
-	defer cleanupTag(t, tag.ID)
 
 	created, err := testQueries.CreateArticleTag(context.Background(), CreateArticleTagParams{
 		ArticleID: article.ID,

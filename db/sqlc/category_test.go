@@ -44,14 +44,12 @@ func categoryInList(categories []Category, id int64) bool {
 
 func TestCreateCategory(t *testing.T) {
 	category := createRandomCategory(t)
-	defer cleanupCategory(t, category.ID)
 
 	require.NotZero(t, category.ID)
 }
 
 func TestGetCategoryByID(t *testing.T) {
 	category := createRandomCategory(t)
-	defer cleanupCategory(t, category.ID)
 
 	fetched, err := testQueries.GetCategoryByID(context.Background(), category.ID)
 	require.NoError(t, err)
@@ -62,9 +60,7 @@ func TestGetCategoryByID(t *testing.T) {
 
 func TestListCategories(t *testing.T) {
 	category1 := createRandomCategory(t)
-	defer cleanupCategory(t, category1.ID)
 	category2 := createRandomCategory(t)
-	defer cleanupCategory(t, category2.ID)
 
 	categories, err := testQueries.ListCategories(context.Background())
 	require.NoError(t, err)
@@ -75,7 +71,6 @@ func TestListCategories(t *testing.T) {
 
 func TestUpdateCategory(t *testing.T) {
 	category := createRandomCategory(t)
-	defer cleanupCategory(t, category.ID)
 
 	updated, err := testQueries.UpdateCategory(context.Background(), UpdateCategoryParams{
 		ID:   category.ID,
