@@ -9,20 +9,26 @@ VALUES (
     $1, $2, $3
 ) RETURNING *;
 
--- 获取用户的硬币余额
+-- 获取coin余额
 -- name: GetCoin :one
 SELECT * 
 FROM coin 
 WHERE id = $1;
 
+-- 列出coin的账号
+-- name: ListCoins :many
+SELECT * FROM coin
+ORDER BY id
+LIMIT $1
+OFFSET $2;
+
 -- 列出用户的账号
--- name: ListCoin :many
+-- name: ListCoinsForUser :many
 SELECT * FROM coin
 WHERE uid = $1
 ORDER BY id
 LIMIT $2
 OFFSET $3;
-
 
 -- 更新用户硬币余额
 -- name: UpdateCoin :one

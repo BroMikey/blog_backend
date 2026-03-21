@@ -12,12 +12,22 @@ type Server struct {
 
 func NewServer(store *db.Store) *Server {
 
-	servicer := &Server{store: store}
+	server := &Server{store: store}
 	router := gin.Default()
-	servicer.router = router
+	server.router = router
 
 	// add routes here
-	router.POST("/")
+	router.POST("/coin", server.createCoin)
+	router.GET("/coin/:id", server.getCoin)
+	router.GET("/coin", server.listCoin)
 
-	return servicer
+	return server
+}
+
+func (server *Server) Start(address string) error {
+	return server.router.Run(address)
+}
+
+func errorResponse(err error) gin.H {
+	return gin.H{"error": err.Error()}
 }

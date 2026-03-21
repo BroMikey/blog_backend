@@ -85,7 +85,7 @@ FROM coin
 WHERE id = $1
 `
 
-// 获取用户的硬币余额
+// 获取coin余额
 func (q *Queries) GetCoin(ctx context.Context, id int64) (Coin, error) {
 	row := q.db.QueryRowContext(ctx, getCoin, id)
 	var i Coin
@@ -100,7 +100,50 @@ func (q *Queries) GetCoin(ctx context.Context, id int64) (Coin, error) {
 	return i, err
 }
 
-const listCoin = `-- name: ListCoin :many
+const listCoins = `-- name: ListCoins :many
+SELECT id, uid, balance, coin_type, created_at, updated_at FROM coin
+ORDER BY id
+LIMIT $1
+OFFSET $2
+`
+
+type ListCoinsParams struct {
+	Limit  int32 `json:"limit"`
+	Offset int32 `json:"offset"`
+}
+
+// 列出coin的账号
+func (q *Queries) ListCoins(ctx context.Context, arg ListCoinsParams) ([]Coin, error) {
+	rows, err := q.db.QueryContext(ctx, listCoins, arg.Limit, arg.Offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []Coin{}
+	for rows.Next() {
+		var i Coin
+		if err := rows.Scan(
+			&i.ID,
+			&i.Uid,
+			&i.Balance,
+			&i.CoinType,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listCoinsForUser = `-- name: ListCoinsForUser :many
 SELECT id, uid, balance, coin_type, created_at, updated_at FROM coin
 WHERE uid = $1
 ORDER BY id
@@ -108,15 +151,15 @@ LIMIT $2
 OFFSET $3
 `
 
-type ListCoinParams struct {
+type ListCoinsForUserParams struct {
 	Uid    int64 `json:"uid"`
 	Limit  int32 `json:"limit"`
 	Offset int32 `json:"offset"`
 }
 
 // 列出用户的账号
-func (q *Queries) ListCoin(ctx context.Context, arg ListCoinParams) ([]Coin, error) {
-	rows, err := q.db.QueryContext(ctx, listCoin, arg.Uid, arg.Limit, arg.Offset)
+func (q *Queries) ListCoinsForUser(ctx context.Context, arg ListCoinsForUserParams) ([]Coin, error) {
+	rows, err := q.db.QueryContext(ctx, listCoinsForUser, arg.Uid, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}
